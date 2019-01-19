@@ -1,0 +1,111 @@
+#!/bin/zsh
+
+# Elastic Services list
+serviceList=(
+"elasticsearch"
+"elasticsearch-node-2"
+"kibana"
+)
+
+# define some constants of ES
+ESNode=2
+
+# Useage function
+
+serviceStart(){
+	echo "Starting $1"
+	sudo systemctl start $1.service
+	if [ $? -eq 0 ]
+	then
+		echo "\033[32mStarting $1 success.\033[0m"
+	else
+		echo "\033[31mStarting $1 failed.\033[0m"
+	fi
+}
+
+serviceStop(){
+	echo "Stopping $1"
+	sudo systemctl stop $1.service
+	if [ $? -eq 0 ]
+	then
+		echo "\033[32mStopping $1 success.\033[0m"
+	else
+		echo "\033[31mStopping $1 failed.\033[0m"
+	fi
+}
+
+echoHelp(){
+	echo "Usages:"
+	echo "	elastic option serviceName"
+	echo ""
+	echo "Options:"
+	echo "	start	- start specified Elasticsearch nodes (Now \033[33m$ESNode\033[0m) or Kibana."
+	echo "	stop	- stop specified services about Elastic."
+	echo "	restart	- restart specified services about Elastic."
+	echo "ServiceName:"
+	echo "	all	- start all services in services list."
+	echo "	<name>	- start the specified service."
+	echo "Current Services:"
+	for val in $serviceList
+	do
+		echo "	- $val"
+	done
+}
+
+if [ $1 ]
+then
+	case $1 in
+		"start")
+			if [ $2 = "all" ]
+			then
+				echo "Starting..."
+				for service in $serviceList
+				do
+					serviceStart $service
+				done
+				echo "Start success."
+			elif [ $2 ]
+			then
+				serviceStart $2
+			fi
+			;;
+		"stop")
+			if [ $2 = "all" ]
+			then
+				echo "Stopping..."
+				for service in $serviceList
+				do
+					serviceStop $service
+				done
+				echo "Stopping success."
+			elif [ $2 ]
+			then
+				serviceStop $2
+			fi
+			;;
+		"restart")
+			if [ $2 = "all" ]
+			then
+				echo "Restarting..."
+				for service in $serviceList
+				do
+					serviceStop $service
+				done
+				for service in $serviceList
+				do
+					serviceStart $service
+				done
+				echo "Restarting success."
+			elif [ $2 ]
+			then
+				serviceStop $2
+				serviceStart $2
+			fi
+			;;
+		*)
+			echoHelp
+	esac
+else
+	echoHelp
+	exit 1
+fi
